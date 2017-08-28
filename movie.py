@@ -41,7 +41,13 @@ class Movie:
 			self.load_page(driver, "ratings", verbose)
 		
 			return driver.find_element_by_xpath("//tbody[1]/tr[{0}]/td".format(12 - stars)).get_attribute("innerText")
-
+	
+	def get_rating(self, driver, verbose=False):
+		if self.get_page(driver) == "ratings":
+			return driver.find_element_by_xpath("//div[@id=\"tn15content\"]/p/a[2]").get_attribute("innerText")
+		else:
+			self.load_page(driver, "ratings", verbose)
+			return self.get_rating(driver, verbose)
 
 def movie_by_name(driver, name):
 	if not "imdb.com" in driver.current_url:

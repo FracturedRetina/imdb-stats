@@ -15,8 +15,9 @@ for line in f:
 	print("Done!")
 print("Done!")
 
-print("IMDB id\t10*\t1*")
+print("IMDB id\trating\t10*\t1*")
+print("-------------------------------")
 for movie in movies:
-	print("{0}\t{1}\t{2}".format(movie.imdb_id, movie.get_n_star(browser, 10), movie.get_n_star(browser, 1)))
+	print("{0}\t{1}\t{2}\t{3}".format(movie.imdb_id, movie.get_rating(browser), movie.get_n_star(browser, 10), movie.get_n_star(browser, 1)))
 
 browser.quit()
