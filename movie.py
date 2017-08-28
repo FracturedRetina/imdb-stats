@@ -15,7 +15,7 @@ class Movie:
 		elif driver.current_url == "http://www.imdb.com/title/tt%s/ratings" % self.imdb_id:
 			return "ratings"
 	
-	def load_page(self, driver, page):
+	def load_page(self, driver, page, verbose=False):
 		url = None
 		if page == "ratings" and not self.get_page(driver) == "ratings":
 			url = "http://www.imdb.com/title/tt%s/ratings" % self.imdb_id
@@ -23,20 +23,22 @@ class Movie:
 			url = "http://www.imdb.com/title/tt%s" % self.imdub_id
 		
 		if url != None:
-			print("Accessing \"{0}\"...".format(url), end="")
+			if verbose:
+				print("Accessing \"{0}\"...".format(url), end="")
 			driver.get(url)
-			print("Done!")
+			if verbose:
+				print("Done!")
 	
-	def has_ratings(self, driver):
+	def has_ratings(self, driver, verbose=False):
 		if self.get_page(driver) == "ratings":
 			return len(driver.find_elements_by_xpath("//tbody[1]/tr")) >= 11
 		else:
-			self.load_page(driver, "ratings")
+			self.load_page(driver, "ratings", verbose)
 			return self.has_ratings(driver)
 	
-	def get_n_star_ratings(self, driver, stars):
+	def get_n_star(self, driver, stars, verbose=False):
 		if self.has_ratings(driver):
-			self.load_page(driver, "ratings")
+			self.load_page(driver, "ratings", verbose)
 		
 			return driver.find_element_by_xpath("//tbody[1]/tr[{0}]/td".format(12 - stars)).get_attribute("innerText")
 
@@ -45,6 +47,7 @@ def movie_by_name(driver, name):
 	if not "imdb.com" in driver.current_url:
 		driver.get("http://www.imdb.com")
 	searchbar = driver.find_element_by_id("navbar-query")
+	searchbar.clear()
 	searchbar.send_keys(name)
 	searchbar.submit()
 	

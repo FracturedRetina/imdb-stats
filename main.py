@@ -3,10 +3,20 @@ from movie import *
 
 browser = webdriver.PhantomJS()
 
-movie = movie_by_name(browser, input("Enter a movie title: "))
-#movie = Movie(input("Enter a movie id: "))
+movies = []
 
-for i in range(10, 0, -1):
-	print("{0}: {1}".format(i, movie.get_n_star_ratings(browser, i)))
+f = open("movies.txt", "r")
+
+print("Loading movies...")
+for line in f:
+	line = line[:-1]
+	print("\tLoading \"{0}\"...".format(line), end="")
+	movies.append(movie_by_name(browser, line))
+	print("Done!")
+print("Done!")
+
+print("IMDB id\t10*\t1*")
+for movie in movies:
+	print("{0}\t{1}\t{2}".format(movie.imdb_id, movie.get_n_star(browser, 10), movie.get_n_star(browser, 1)))
 
 browser.quit()
