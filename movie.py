@@ -56,7 +56,7 @@ class Movie:
 		if self.has_ratings(driver):
 			self.load_page(driver, "ratings", verbose)
 		
-			return int(driver.find_element_by_xpath("//tbody[1]/tr[{0}]/td".format(12 - stars)).get_attribute("innerText"))
+			return int(driver.find_element_by_xpath("//tbody[1]/tr[{0}]/td[3]/div/div".format(12 - stars)).get_attribute("innerText").replace(',',""))
 	
 	def get_num_ratings(self, driver, verbose=False):
 		if self.get_page(driver) == "ratings":
