@@ -1,7 +1,8 @@
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
+import re
 
 class Movie:
 	def __init__(self, imdb_id, title=None):
@@ -9,7 +10,13 @@ class Movie:
 			imdb_id = str(imdb_id[2:])
 		
 		self.imdb_id = imdb_id
-	
+		if title != None and re.search(r"(?! \()\d{4}(?=\)($|\n))", title) != None:
+			self.year = re.search(r"(?! \()\d{4}(?=\)($|\n))", title)
+			self.title = re.sub(r" \(\d{4}\)($|\n)", "", title)
+		else:
+			self.year = None
+			self.title = title
+
 	def get_page(self, driver):
 		if driver.current_url == "http://www.imdb.com/title/tt%s" % self.imdb_id:
 			return "title"
@@ -76,7 +83,9 @@ class Movie:
 	def get_rating(self, driver, verbose=False):
 		if self.has_ratings(driver):
 			if self.get_page(driver) == "ratings":
-				return driver.find_element_by_xpath("//div[@id=\"tn15content\"]/p/a[2]").get_attribute("innerText")
+				return driver.find_element_by_xpath("//*[@name=\"ir\"]").get_attribute("data-value")
+			elif self.get_page(driver) == "title":
+				return driver.find_element_by_xpath("//*[@itemprop='ratingValue']").get_attribute("innerText")
 			else:
 				self.load_page(driver, "ratings", verbose)
 				return self.get_rating(driver, verbose)
@@ -88,7 +97,11 @@ def movie_by_name(driver, name):
 			WebDriverWait(driver, 10).until(expected_conditions.presence_of_element_located((By.ID, "navbar-query")))
 		except TimeoutException:
 			return None
-	searchbar = driver.find_element_by_id("navbar-query")
+	try:
+		searchbar = driver.find_element_by_id("navbar-query")
+	except NoSuchElementException:
+		return None
+	
 	searchbar.clear()
 	searchbar.send_keys(name)
 	searchbar.submit()
