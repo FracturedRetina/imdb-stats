@@ -6,7 +6,7 @@ import plotly.plotly as py
 import plotly.graph_objs as go
 
 verbose = False
-nummovies = 5
+nummovies = 10
 
 browser = webdriver.PhantomJS()
 movies = []
@@ -57,28 +57,37 @@ f = open("log{:03}.csv".format(fnum), "w")
 
 titles = []
 imdb_ids = []
+years = []
 ratings = []
+rating_counts = []
 ten_stars = []
 one_stars = []
+rage_ratings = []
 differences = []
 
-print("Title,IMDb ID,Rating,10 Star,1 Star,Difference", file=f)
+print("Title,IMDb ID,Year,Rating,Number of Ratings,10 Star,1 Star,Difference", file=f)
 for m in movies:
 	title = m.get_title(browser, verbose).replace(',', '-')
 	titles.append(title)
 	imdb_id = m.imdb_id
 	imdb_ids.append(imdb_id)
+	year = m.year
+	years.append(year)
 	rating = m.get_rating(browser, verbose)
 	ratings.append(rating)
-	ten_star = m.get_n_star(browser, 10, verbose)
+	rating_count = m.num_ratings
+	rating_counts.append(rating_count)
+	ten_star = m.n_star_ratings[10]
 	ten_stars.append(ten_star)
-	one_star = m.get_n_star(browser, 1)
+	one_star = m.n_star_ratings[1]
 	one_stars.append(one_star)
-	difference = float("{0:.1f}".format((ten_star * 10 + one_star) / (ten_star + one_star)))
+	rage_rating = float("{0:.1f}".format((ten_star * 10 + one_star) / (ten_star + one_star)))
+	rage_ratings.append(rage_rating)
+	difference = rage_rating - rating
 	differences.append(difference)
 	
-	print("{0},{1},{2},{3},{4},{5}".format(title, imdb_id, rating, ten_star, one_star, difference), file=f)
-	print("{0}\t{1}\t{2}\t{3}\t{4}\t{5}".format(truncate(title, 15), imdb_id, rating, ten_star, one_star, difference))
+	print("{0},{1},{2},{3},{4},{5},{6},{7}.{8}".format(title, imdb_id, year, rating, rating_count, ten_star, one_star, rage_rating, difference), file=f)
+	print("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}\t{7}\t{8}".format(truncate(title, 15), imdb_id, year, rating, rating_count, ten_star, one_star, rage_rating, difference))
 
 """
 layout = go.Layout(
