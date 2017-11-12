@@ -11,12 +11,14 @@ class Movie:
 		
 		self.imdb_id = imdb_id
 		if title != None and re.search(r"(?! \()\d{4}(?=\)($|\n))", title) != None:
-			self.year = re.search(r"(?! \()\d{4}(?=\)($|\n))", title)
+			self.year = re.search(r"(?! \()\d{4}(?=\)($|\n))", title).group(0)
 			self.title = re.sub(r" \(\d{4}\)($|\n)", "", title)
 		else:
 			self.year = None
 			self.title = title
-
+		self.n_star_ratings = [None, None, None, None, None, None, None, None, None, None, None]
+		self.rating = None
+		self.num_ratings = None
 	def get_page(self, driver):
 		if driver.current_url == "http://www.imdb.com/title/tt%s" % self.imdb_id:
 			return "title"
@@ -55,6 +57,7 @@ class Movie:
 	def has_ratings(self, driver, verbose=False):
 		if self.get_page(driver) == "ratings":
 			return len(driver.find_elements_by_xpath("//tbody[1]/tr")) >= 11
+			num_ratings = 0
 		else:
 			self.load_page(driver, "ratings", verbose)
 			return self.has_ratings(driver, verbose)
@@ -62,15 +65,16 @@ class Movie:
 	def get_n_star(self, driver, stars, verbose=False):
 		if self.has_ratings(driver):
 			self.load_page(driver, "ratings", verbose)
+			self.n_star_ratings[stars] =  int(driver.find_element_by_xpath("//tbody[1]/tr[{0}]/td[3]/div/div".format(12 - stars)).get_attribute("innerText").replace(',',""))
+			return self.n_star_ratings[stars]
 		
-			return int(driver.find_element_by_xpath("//tbody[1]/tr[{0}]/td[3]/div/div".format(12 - stars)).get_attribute("innerText").replace(',',""))
-	
 	def get_num_ratings(self, driver, verbose=False):
 		if self.get_page(driver) == "ratings":
 			if self.has_ratings(driver, verbose):
 				num_ratings = 0
 				for i in range (1, 11):
 					num_ratings += self.get_n_star(driver, i, verbose)
+				self.num_ratings = num_ratings
 				return num_ratings
 			else:
 				return 0
@@ -83,9 +87,11 @@ class Movie:
 	def get_rating(self, driver, verbose=False):
 		if self.has_ratings(driver):
 			if self.get_page(driver) == "ratings":
-				return driver.find_element_by_xpath("//*[@name=\"ir\"]").get_attribute("data-value")
+				self.rating = driver.find_element_by_xpath("//*[@name=\"ir\"]").get_attribute("data-value")
+				return self.rating
 			elif self.get_page(driver) == "title":
-				return driver.find_element_by_xpath("//*[@itemprop='ratingValue']").get_attribute("innerText")
+				self.rating = driver.find_element_by_xpath("//*[@itemprop='ratingValue']").get_attribute("innerText")
+				return self.rating
 			else:
 				self.load_page(driver, "ratings", verbose)
 				return self.get_rating(driver, verbose)
